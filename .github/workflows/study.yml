@@ -10,8 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: print
-        run: ls -a
+      - name: create-vite-env
+        run: |
+          chmod 777 -R front
+          cd front
+          echo "VITE_PORTONE_STOREID=${{ secrets.VITE_PORTONE_STOREID }}" > ./.env
+          cat .env
     
 
 
