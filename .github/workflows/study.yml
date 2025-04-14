@@ -81,13 +81,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: 👷 Build-And-Push-React-App
-        run:
+        run: |
           cd front
           docker build -t ${{ secrets.DOCKER_USERNAME }}/board-react-app .
           docker push ${{ secrets.DOCKER_USERNAME }}/board-react-app:latest
           
       - name: 👷 Build-And-Push-Spring-App
-        run:
+        run: |
           cd back
           docker build -t ${{ secrets.DOCKER_USERNAME }}/board-spring-app .
           docker push ${{ secrets.DOCKER_USERNAME }}/board-spring-app:latest
@@ -102,5 +102,11 @@ jobs:
           host: ${{ secrets.EC2_PUBLIC_IP }}
           usename: ubuntu
           key: ${{ secrets.SSH_KEY }}
+          script: |
+            sudo docker pull ${{ DOCKER_USERNAME }}/board-react-app:latest
+            sudo docker pull ${{ DOCKER_USERNAME }}/board-spring-app:latest
+            cd /home/ubuntu/project
+            sudo docker-compose -f project-compose.yml down
+            sudo docker-compose -f project-compose.yml up -d
 
 
