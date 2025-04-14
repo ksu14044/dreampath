@@ -70,7 +70,7 @@ jobs:
           cat back/src/main/resources/application-secret.yml
           
       - name: print-directory
-        run:
+        run: |
           ls -a front
           ls -a back/src/main/resources
           
