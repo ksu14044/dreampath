@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  directory-print:
+  build-push:
     runs-on: ubuntu-latest
     steps:
       - name: ✅ Checkout
@@ -68,7 +68,39 @@ jobs:
               from: ${{ secrets.COOLSMS_API_FROM }}
           EOL
           cat back/src/main/resources/application-secret.yml
-                    
-    
+          
+      - name: print-directory
+        run:
+          ls -a front
+          ls -a back/src/main/resources
+          
+      - name: 🚢 DockerHub-LOGIN
+        uses: docker/login-action@v3.4.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 👷 Build-And-Push-React-App
+        run:
+          cd front
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/board-react-app .
+          docker push ${{ secrets.DOCKER_USERNAME }}/board-react-app:latest
+          
+      - name: 👷 Build-And-Push-Spring-App
+        run:
+          cd back
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/board-spring-app .
+          docker push ${{ secrets.DOCKER_USERNAME }}/board-spring-app:latest
+
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: shh
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          usename: ubuntu
+          key: ${{ secrets.SSH_KEY }}
 
 
