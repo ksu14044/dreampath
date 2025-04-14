@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.PostLikeMapper">
+    <resultMap id="postLikeResultMap" type="com.korit.dreampath_back.entity.PostLike">
+        <id property="postLikeId" column="post_like_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="postId" column="post_id"/>
+    </resultMap>
+
+    <insert id="addPostLike">
+        insert into post_like_tb
+        values(default, #{userId}, #{postId})
+    </insert>
+
+    <select id="findLikeUserByUserIdAndPostId" resultMap="postLikeResultMap">
+        select
+            post_like_id,
+            user_id,
+            post_id
+        from
+            post_like_tb
+        where
+            user_id = #{userId}
+            and post_id = #{postId}
+    </select>
+
+    <delete id="deletePostLike">
+        delete from post_like_tb
+        where
+            user_id = #{userId}
+            and post_id = #{postId}
+    </delete>
+</mapper>

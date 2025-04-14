@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.TicketMapper">
+
+
+
+    <resultMap id="ticketResultMap" type="com.korit.dreampath_back.entity.Ticket">
+        <id property="ticketId" column="ticket_id" />
+        <result property="ticketName" column="ticket_name" />
+        <result property="entryCount" column="entry_count" />
+        <result property="price" column="price" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <resultMap id="ticketPurchaseResultMap" type="com.korit.dreampath_back.entity.TicketPurchaseHistory">
+
+        <result property="createdAt" column="created_at" />
+
+        <result property="ticketName" column="ticket_name"/>
+        <result property="price" column="price"/>
+
+    </resultMap>
+    <insert id="saveTicketPurchase">
+        insert into purchase_tb
+        values(default, #{ticketId}, #{userId}, now())
+    </insert>
+
+
+    <select id="getTicketPurchaseList" resultMap="ticketPurchaseResultMap">
+        select
+            pt.created_at,
+            tt.ticket_name,
+            tt.price
+        from
+            purchase_tb pt
+            left outer join ticket_tb tt on(tt.ticket_id = pt.ticket_id)
+        where
+            pt.user_id = #{userId}
+        order by
+            <choose>
+                <when test="order == 'asc'">
+                    purchase_id asc,
+                </when>
+            </choose>
+            purchase_id desc
+        limit #{startIndex}, #{limitCount}
+    </select>
+    <select id="findAllTicketPurchase" resultType="java.lang.Integer">
+        select
+            count(purchase_id)
+        from
+            purchase_tb
+        where
+            user_id = #{userId}
+    </select>
+    <select id="selectTicketByTicketId" resultType="com.korit.dreampath_back.entity.Ticket">
+        select
+            ticket_id as ticketId,
+            ticket_name as ticketName,
+            entry_count as entryCount,
+            price,
+            created_at as createdAt
+        from
+            ticket_tb
+        where
+            ticket_id = #{ticketId}
+    </select>
+</mapper>

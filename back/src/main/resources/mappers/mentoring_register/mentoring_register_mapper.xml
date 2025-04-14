@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.ApplyMapper">
+    <resultMap id="registerResultMap" type="com.korit.dreampath_back.entity.MentoringRegister">
+        <id property="mentoringRegisterId" column="mentoring_register_id" />
+        <result property="userId" column="user_id" />
+        <result property="postId" column="post_id" />
+        <result property="applyAt" column="apply_at" />
+    </resultMap>
+
+    <select id="getMentoringRegisterList" resultMap="registerResultMap">
+        select
+            mentoring_register_id,
+            user_id,
+            post_id
+        from
+            mentoring_register_tb
+        where
+            user_id = #{userId}
+        and
+            post_id = #{postId}
+    </select>
+    <select id="getMyApplySearchList" resultType="com.korit.dreampath_back.entity.MyApplySearch">
+        select
+            pt.title,
+            ut.nickname as mento,
+            mrt.apply_at as createdAt,
+            mrt.post_id as postId
+        from
+            mentoring_register_tb mrt
+            left outer join post_tb pt on (pt.post_id = mrt.post_id)
+            left outer join user_tb ut on (pt.user_id = ut.user_id)
+        where
+            mrt.user_id = #{userId}
+            <if test ="searchText != null and searchText != ''">
+                and pt.title like concat("%", #{searchText}, "%")
+            </if>
+        order by
+            <choose>
+                <when test="order == 'asc'">
+                    mentoring_register_id asc,
+                </when>
+            </choose>
+            mentoring_register_id desc
+        limit #{startIndex}, #{limitCount}
+
+    </select>
+    <select id="findMyApplySearchListBySearchText" resultType="java.lang.Integer">
+        select
+            count(*)
+        from
+            mentoring_register_tb
+        <where>
+            user_id = #{userId}
+            <if test="searchText != null and searchText != ''">
+                and title like concat("%", #{searchText}, "%")
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertMentoringRegister" keyProperty="mentoringRegisterId" useGeneratedKeys="true">
+        insert into mentoring_register_tb (
+            mentoring_register_id,
+            user_id,
+            post_id,
+            apply_at
+        ) values (default, #{userId}, #{postId}, now())
+    </insert>
+
+
+
+
+</mapper>

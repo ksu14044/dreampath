@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.BoardMapper">
+    <resultMap id="postResultMap" type="com.korit.dreampath_back.entity.Board">
+        <id property="boardId" column="board_id"/>
+        <result property="boardName" column="board_name"/>
+        <result property="boardNameKor" column="board_name_kor" />
+    </resultMap>
+
+    <select id="selectBoardIdByBoardName" resultMap="postResultMap">
+        select
+            board_id,
+            board_name
+        from
+            board_tb
+        where
+            board_name = #{boardName}
+    </select>
+
+    <select id="findAll" resultMap="postResultMap">
+        select
+            board_id,
+            board_name,
+            board_name_kor
+        from
+            board_tb
+    </select>
+
+
+</mapper>

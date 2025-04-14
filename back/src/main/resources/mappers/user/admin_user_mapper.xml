@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.AdminUserMapper">
+    <resultMap id="roleResultMap" type="com.korit.dreampath_back.entity.Role">
+        <id property="roleId" column="role_id" />
+        <result property="roleName" column="role_name" />
+    </resultMap>
+
+    <resultMap id="userRoleResultMap" type="com.korit.dreampath_back.entity.UserRole">
+        <id property="userRoleId" column="user_role_id" />
+        <result property="userId" column="urt_user_id" />
+        <result property="roleId" column="urt_role_id" />
+        <association property="role" resultMap="roleResultMap" />
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.korit.dreampath_back.entity.UserAdmin">
+        <id property="userId" column="user_id" />
+        <result property="username" column="username" />
+        <result property="email" column="email" />
+        <result property="nickname" column="nickname" />
+        <result property="phoneNumber" column="phone_number" />
+        <result property="oAuth2Name" column="oauth2_name" />
+        <result property="oAuth2Provider" column="oauth2_provider" />
+        <result property="createdAt" column="created_at" />
+        <result property="totalPrice" column="total_price" />
+        <collection property="userRoles" javaType="java.util.Set" resultMap="userRoleResultMap" />
+    </resultMap>
+
+    <resultMap id="userPaginationResultMap" type="com.korit.dreampath_back.entity.User">
+        <id property="userId" column="user_id" />
+        <result property="username" column="username" />
+        <result property="email" column="email" />
+        <result property="nickname" column="nickname" />
+        <result property="phoneNumber" column="phone_number" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <resultMap id="getAdminUserPageResultMap" type="com.korit.dreampath_back.entity.UserAdmin">
+        <id property="userId" column="user_id" />
+        <result property="username" column="username" />
+        <result property="email" column="email" />
+        <result property="nickname" column="nickname" />
+        <result property="phoneNumber" column="phone_number" />
+        <result property="createdAt" column="created_at" />
+        <result property="totalPrice" column="total_price" />
+        <collection property="userRoles" javaType="java.util.Set" resultMap="userRoleResultMap" />
+    </resultMap>
+
+    <resultMap id="pointResultMap" type="com.korit.dreampath_back.entity.Point">
+        <id property="pointId" column="point_id" />
+        <result property="pointName" column="point_name" />
+        <result property="pointPrice" column="point_price" />
+    </resultMap>
+
+    <resultMap id="pointPurchaseResultMap" type="com.korit.dreampath_back.entity.PointPurchase">
+        <id property="pointPurchaseId" column="point_purchase_id" />
+        <result property="pointId" column="point_id" />
+        <result property="userId" column="user_id" />
+        <result property="createdAt" column="created_at" />
+        <association property="point" resultMap="pointResultMap" />
+        <association property="user" resultMap="userResultMap" />
+    </resultMap>
+
+
+    <delete id="deleteById">
+        delete
+        from
+            user_tb
+        where
+            user_id = #{userId}
+    </delete>
+
+    <select id="findUserRoleByUserId" resultType="java.lang.String">
+        select
+            rt.role_name
+        from
+            user_tb ut
+            left outer join user_role_tb urt on (urt.user_id = ut.user_id)
+            left outer join role_tb rt on (rt.role_id = urt.role_id)
+        where
+            ut.user_id = #{userId};
+    </select>
+
+    <select id="getAdminUserPage" resultMap="getAdminUserPageResultMap">
+        select
+            ut.user_id,
+            ut.username,
+            ut.email,
+            ut.nickname,
+            ut.phone_number,
+            ut.created_at,
+            rt.role_name,
+
+            sum(pt.point_price) as total_price
+
+        from
+            user_tb ut
+            left outer join user_role_tb urt on(urt.user_id = ut.user_id)
+            left outer join role_tb rt on(rt.role_id = urt.role_id)
+
+            left outer join point_purchase_tb ppt on(ppt.user_id = ut.user_id)
+            left outer join point_tb pt on(ppt.point_id = pt.point_id)
+
+        group by ut.user_id
+        order by
+            <choose>
+                <when test="order == 'asc'">
+                    user_id asc,
+                </when>
+            </choose>
+            user_id desc
+        limit #{startIndex}, #{limitCount}
+    </select>
+
+    <select id="findAllUserCount" resultType="java.lang.Integer">
+        select
+            count(*)
+        from
+            user_tb
+    </select>
+
+</mapper>

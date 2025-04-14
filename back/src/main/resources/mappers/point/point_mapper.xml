@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.PointMapper">
+    <resultMap id="pointResultMap" type="com.korit.dreampath_back.entity.Point">
+        <id property="pointId" column="point_id" />
+        <result property="pointName" column="point_name" />
+        <result property="pointPrice" column="point_price" />
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.korit.dreampath_back.entity.User">
+        <id property="userId" column="user_id" />
+        <result property="username" column="username" />
+        <result property="password" column="password" />
+        <result property="email" column="email" />
+        <result property="nickname" column="nickname" />
+        <result property="phoneNumber" column="phone_number" />
+        <result property="profileImg" column="profile_img" />
+        <result property="ticketId" column="ticket_id" />
+        <result property="oAuth2Name" column="oauth2_name" />
+        <result property="oAuth2Provider" column="oauth2_provider" />
+        <result property="remaining" column="remaining" />
+        <result property="starPoint" column="star_point" />
+        <result property="accountExpired" column="account_expired" />
+        <result property="accountLocked" column="account_locked" />
+        <result property="credentialsExpired" column="credentials_expired" />
+        <result property="accountEnabled" column="account_enabled" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <resultMap id="pointPurchaseResultMap" type="com.korit.dreampath_back.entity.PointPurchase">
+        <id property="pointPurchaseId" column="point_purchase_id" />
+        <result property="pointId" column="point_id" />
+        <result property="userId" column="user_id" />
+        <result property="mid" column="mid" />
+        <result property="status" column="status" />
+        <result property="createdAt" column="created_at" />
+        <association property="point" resultMap="pointResultMap" />
+        <association property="user" resultMap="userResultMap" />
+    </resultMap>
+
+    <insert id="savePurchasePoint">
+        insert into point_purchase_tb
+        value(default, #{pointId}, #{userId}, #{mid}, #{status}, now())
+    </insert>
+
+    <select id="getPointPurchase" resultMap="pointPurchaseResultMap">
+        select
+            ppt.mid,
+            pt.point_name,
+            pt.point_price,
+            ppt.status,
+            ppt.created_at
+        from
+            point_purchase_tb ppt
+            left outer join point_tb pt on( pt.point_id = ppt.point_id )
+            left outer join user_tb ut on (ppt.user_id = ut.user_id)
+        where
+            ppt.user_id = #{userId}
+        order by
+            <choose>
+                <when test="order == 'asc'">
+                    point_purchase_id asc,
+                </when>
+            </choose>
+            point_purchase_id desc
+        limit #{startIndex}, #{limitCount}
+    </select>
+
+    <select id="findAllPointPurchase" resultType="java.lang.Integer">
+        select
+            count(*)
+        from
+            point_purchase_tb
+        where
+            user_id = #{userId}
+    </select>
+    <select id="selectPointByPointId" resultType="com.korit.dreampath_back.entity.Point">
+        select
+            point_id as pointId,
+            point_name as pointName,
+            point_amount as pointAmount,
+            point_price as pointPrice
+        from
+            point_tb
+        where
+            point_id = #{pointId}
+    </select>
+
+
+</mapper>

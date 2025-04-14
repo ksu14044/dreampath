@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.PostMapper">
+    <resultMap id="postDetailResultMap" type="com.korit.dreampath_back.entity.PostDetail">
+        <id property="postId" column="post_id"/>
+        <result property="boardId" column="board_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="categoryNameKor" column="category_name_kor"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="starPoint" column="star_point"/>
+        <result property="mentoringAddress" column="mentoring_address"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="attachedFiles" column="attached_files"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <association property="user" resultMap="userResultMap"/>
+    </resultMap>
+
+    <resultMap id="RespPostListResultMap" type="com.korit.dreampath_back.entity.PostListPage">
+        <id property="postId" column="post_id"/>
+        <result property="boardId" column="board_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="categoryNameKor" column="category_name_kor"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="starPoint" column="pt_star_point"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="viewCount" column="view_count"/>
+        <association property="user" resultMap="userResultMap"/>
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.korit.dreampath_back.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="nickname" column="nickname"/>
+        <result property="phoneNumber" column="phone_number"/>
+        <result property="profileImg" column="profile_img"/>
+        <result property="ticketId" column="ticket_id"/>
+        <result property="oAuth2Name" column="oauth2_name"/>
+        <result property="oAuth2Provider" column="oauth2_provider"/>
+        <result property="remaining" column="remaining"/>
+        <result property="starPoint" column="ut_star_point"/>
+        <result property="accountExpired" column="account_expired"/>
+        <result property="accountLocked" column="account_locked"/>
+        <result property="credentialsExpired" column="credentials_expired"/>
+        <result property="accountEnabled" column="account_enabled"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="createPost" useGeneratedKeys="true" keyProperty="postId">
+        insert into post_tb
+        values(
+        default,
+        #{boardId},
+        #{userId},
+        #{categoryId},
+        #{title},
+        #{content},
+        0,
+        #{mentoringAddress},
+        #{startDate},
+        #{endDate},
+        #{status},
+        now(),
+        #{updatedAt},
+        #{viewCount},
+        #{attachedFiles}
+        )
+    </insert>
+
+    <select id="selectPostList" resultMap="RespPostListResultMap">
+        select
+        pt.post_id,
+        pt.board_id,
+        pt.user_id,
+        pt.category_id,
+        ct.category_name as category_name,
+        ct.category_name_kor as category_name_kor,
+        pt.title,
+        pt.content,
+        pt.status,
+        pt.star_point as pt_star_point,
+        pt.created_at,
+        pt.view_count,
+
+        (select count(*) from comment_tb cmt where cmt.post_id = pt.post_id) as comment_count,
+        (select count(*) from post_like_tb plt where plt.post_id = pt.post_id) as like_count,
+
+        ut.user_id,
+        ut.username,
+        ut.password,
+        ut.email,
+        ut.nickname,
+        ut.star_point as ut_star_point,
+        ut.oauth2_name,
+        ut.oauth2_provider,
+        ut.profile_img,
+        ut.account_expired,
+        ut.account_locked,
+        ut.credentials_expired,
+        ut.account_enabled,
+        ut.created_at
+        from
+        post_tb pt
+        left outer join user_tb ut on(ut.user_id = pt.user_id)
+        left outer join category_tb ct on(ct.category_id = pt.category_id)
+        <where>
+            pt.board_id = #{boardId}
+            <if test="status != null and status == 'recruiting'">
+                and pt.status = "recruiting"
+            </if>
+            <if test="status != null and status == 'closedRecruitment'">
+                and pt.status = "closedRecruitment"
+            </if>
+
+            <if test="searchTxt != null and searchTxt != ''">
+                and pt.title like concat("%", #{searchTxt} , "%")
+            </if>
+
+            <if test="category != null and category == 'back'">
+                and pt.category_id = (select ct.category_id from category_tb ct where ct.category_name = "back")
+            </if>
+            <if test="category != null and category == 'front'">
+                and pt.category_id = (select ct.category_id from category_tb ct where ct.category_name = "front")
+            </if>
+            <if test="category != null and category == 'security'">
+                and pt.category_id = (select ct.category_id from category_tb ct where ct.category_name = "security")
+            </if>
+            <if test="category != null and category == 'full'">
+                and pt.category_id = (select ct.category_id from category_tb ct where ct.category_name = "full")
+            </if>
+        </where>
+        group by
+        pt.post_id
+        order by
+        <choose>
+            <when test="order == 'asc'">
+                post_id asc,
+            </when>
+            <when test="order == 'starDesc'">
+                pt_star_point desc,
+            </when>
+            <when test="order == 'likeDesc'">
+                like_count desc,
+            </when>
+        </choose>
+        post_id desc
+        limit #{startIdx}, #{limitCount}
+    </select>
+    <select id="selectPostListCountAllBySearchTxt" resultType="java.lang.Integer">
+        select
+        count(*)
+        from
+        post_tb
+        <where>
+            board_id = #{boardId}
+            <if test="searchTxt != null and searchTxt != ''">
+                and title like concat("%", #{searchTxt} , "%")
+            </if>
+        </where>
+    </select>
+    <select id="selectPostDetail" resultMap="postDetailResultMap">
+        select
+        ptt.post_id,
+        ptt.board_id,
+        ptt.user_id,
+        ptt.category_id,
+        ct.category_name as category_name,
+        ct.category_name_kor as category_name_kor,
+        ptt.title,
+        ptt.content,
+        ptt.star_point,
+        ptt.mentoring_address,
+        ptt.start_date,
+        ptt.end_date,
+        ptt.status,
+        ptt.created_at,
+        ptt.updated_at,
+        ptt.view_count,
+        ptt.attached_files,
+
+        (select count(*) from post_like_tb plt where plt.post_id = ptt.post_id) as like_count,
+
+        ut.user_id,
+        ut.username,
+        ut.password,
+        ut.email,
+        ut.nickname,
+        ut.oauth2_name,
+        ut.oauth2_provider,
+        ut.profile_img,
+        ut.account_expired,
+        ut.account_locked,
+        ut.credentials_expired,
+        ut.account_enabled,
+        ut.created_at
+        from
+        post_tb ptt
+        left outer join user_tb ut on(ut.user_id = ptt.user_id)
+        left outer join category_tb ct on(ct.category_id = ptt.category_id)
+        where
+        ptt.post_id = #{postId}
+        group by
+        ptt.post_id
+    </select>
+    <select id="getPostStatusByPostId" resultType="java.lang.String">
+        select
+        status
+        from post_tb
+        where
+        post_id = #{postId}
+    </select>
+    <select id="getPostStarPointAvgByPostId" resultType="java.lang.Double">
+        select
+        ROUND(avg(star_point),1)
+        from
+        comment_tb
+        group by
+        post_id
+        having
+        post_id = #{postId}
+    </select>
+    <select id="selectPostIdByCommentId" resultType="java.lang.Integer">
+        select
+        post_id
+        from
+        comment_tb
+        where
+        comment_id = #{commentId}
+    </select>
+
+    <select id="getBeforeTodayPosts" resultMap="postDetailResultMap">
+        select
+        ptt.post_id,
+        ptt.start_date,
+        ptt.end_date
+
+        from
+        post_tb ptt
+        where
+        ptt.end_date &lt; now()
+    </select>
+    <select id="getBoardIdByPostId" resultType="java.lang.Integer">
+        select
+        board_id
+        from
+        post_tb
+        where
+        post_id = #{postId}
+
+    </select>
+    <select id="getPostByPostId" resultMap="RespPostListResultMap">
+        select
+        pt.post_id,
+        pt.board_id,
+        pt.user_id,
+        pt.category_id,
+        ct.category_name as category_name,
+        ct.category_name_kor as category_name_kor,
+        pt.title,
+        pt.content,
+        pt.status,
+        pt.star_point as pt_star_point,
+        pt.created_at,
+        pt.view_count,
+
+        (select count(*) from comment_tb cmt where cmt.post_id = pt.post_id) as comment_count,
+        (select count(*) from post_like_tb plt where plt.post_id = pt.post_id) as like_count,
+
+        ut.user_id,
+        ut.username,
+        ut.password,
+        ut.email,
+        ut.nickname,
+        ut.star_point as ut_star_point,
+        ut.oauth2_name,
+        ut.oauth2_provider,
+        ut.profile_img,
+        ut.account_expired,
+        ut.account_locked,
+        ut.credentials_expired,
+        ut.account_enabled,
+        ut.created_at
+        from
+        post_tb pt
+        left outer join user_tb ut on(ut.user_id = pt.user_id)
+        left outer join category_tb ct on(ct.category_id = pt.category_id)
+        where
+        pt.post_id = #{postId}
+    </select>
+
+    <update id="updatedPost">
+        update post_tb
+        set
+        title = #{title},
+        content = #{content},
+        category_id = #{categoryId},
+        mentoring_address = #{mentoringAddress},
+        end_date = #{endDate},
+        <if test="attachedFiles != null">
+            attached_files = #{attachedFiles},
+        </if>
+        updated_at = now()
+        where
+        post_id = #{postId}
+        and user_id = #{userId}
+    </update>
+
+    <update id="updatePostViewCount">
+        update post_tb
+        set
+        view_count = view_count + 1
+        where
+        post_id = #{postId}
+    </update>
+
+    <update id="updatePostStatusClosedRecruiting">
+        update post_tb
+        set status = "closedRecruitment"
+        where post_id = #{postId}
+        <if test="userId != null and userId != '0'">
+            and user_id = #{userId}
+        </if>
+    </update>
+
+    <update id="updatePostStatusRecruiting">
+        update post_tb
+        set status = "recruiting"
+        where post_id = #{postId}
+        and user_id = #{userId}
+    </update>
+    <update id="updatePostStarPointAvgByPostId">
+        update post_tb
+        set star_point = #{postStarPoint}
+        where post_id = #{postId}
+    </update>
+
+    <delete id="deletePost">
+        delete from post_tb
+        where
+        post_id = #{postId}
+        and user_id = #{userId}
+    </delete>
+
+</mapper>

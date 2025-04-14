@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.CategoryMapper">
+
+    <resultMap id="categoryResultMap" type="com.korit.dreampath_back.entity.Category">
+        <id property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="categoryNameKor" column="category_name_kor"/>
+        <result property="boardId" column="board_id" />
+        <result property="type" column="type" />
+    </resultMap>
+    <select id="findAllByBoardId" resultMap="categoryResultMap">
+        select
+            category_id,
+            category_name,
+            category_name_kor,
+            board_id,
+            type
+        from
+            category_tb
+        where
+            board_id = #{boardId}
+    </select>
+</mapper>

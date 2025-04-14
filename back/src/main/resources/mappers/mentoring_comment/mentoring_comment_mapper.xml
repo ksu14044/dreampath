@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.korit.dreampath_back.mapper.MentoringCommentMapper">
+    <resultMap id="mentoring_commentResultMap" type="com.korit.dreampath_back.entity.MentoringComment">
+        <id property="commentId" column="comment_id" />
+        <result property="userId" column="user_id" />
+        <result property="postId" column="post_id" />
+        <result property="content" column="content" />
+        <result property="starPoint" column="star_point" />
+        <result property="updateAt" column="update_at" />
+        <result property="createdAt" column="created_at" />
+
+        <result property="nickname" column="nickname" />
+    </resultMap>
+
+    <insert id="createComment" useGeneratedKeys="true" keyProperty="commentId">
+        insert into comment_tb(
+        comment_id,
+        user_id,
+        post_id,
+        content,
+        star_point,
+        update_at,
+        created_at)
+
+        values(
+        default,
+        #{userId},
+        #{postId},
+        #{content},
+        #{starPoint},
+        now(),
+        now())
+
+    </insert>
+
+    <update id="updateComment">
+        update comment_tb
+        set
+        content = #{content},
+        star_point = #{starPoint},
+        update_at = now()
+        where
+        comment_id = #{commentId}
+        and
+        user_id = #{userId}
+    </update>
+
+
+    <delete id="deleteComment">
+        delete
+        from
+        comment_tb
+        where
+        comment_id = #{commentId}
+    </delete>
+
+    <select id="findCommentByPostId" resultType="com.korit.dreampath_back.entity.CommentSearch">
+        select
+        ct.comment_id,
+        ct.star_point as starPoint,
+        ct.content,
+
+        ut.user_id as userId,
+        ut.nickname as nickname,
+        ut.profile_img as profileImg,
+
+        ct.created_at as createdAt
+
+        from
+        comment_tb ct
+        left outer join user_tb ut on(ct.user_id = ut.user_id)
+        where
+        ct.post_id = #{postId}
+        order by
+        ct.comment_id desc
+
+        limit #{startIndex}, #{limitCount}
+
+    </select>
+
+
+    <select id="findByComment" resultMap="mentoring_commentResultMap">
+        select
+        comment_id,
+        user_id,
+        post_id,
+        content,
+        star_point,
+        update_at,
+        created_at
+        from
+        comment_tb
+        where
+        comment_id = #{commentId}
+        and
+        post_id = #{postId}
+
+    </select>
+    <select id="getCountCommentsByPostId" resultType="java.lang.Integer">
+        select
+        count(*)
+        from
+        comment_tb
+        where
+        post_id = #{postId}
+    </select>
+
+</mapper>
