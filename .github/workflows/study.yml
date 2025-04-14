@@ -31,7 +31,7 @@ jobs:
           
             datasource:
               driver-class-name: com.mysql.cj.jdbc.Driver
-              url: jdbc:mysql://${{ secrets.EC2_PUBLIC_IP }}:3306/${{ secrets.DATABASE_NAME }}
+              url: jdbc:mysql://${{ secrets.RDS_NAME }}:3306/${{ secrets.DATABASE_NAME }}
               username: ${{ secrets.DATABASE_USERNAME }}
               password: ${{ secrets.DATABASE_PASSWORD }}
           
