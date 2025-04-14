@@ -13,9 +13,61 @@ jobs:
       - name: create-vite-env
         run: |
           chmod 777 -R front
-          cd front
-          echo "VITE_PORTONE_STOREID=${{ secrets.VITE_PORTONE_STOREID }}" > ./.env
-          cat .env
+          cat <<EOL > front/.env
+          VITE_PORTONE_STOREID={{ secrets.VITE_PORTONE_STOREID }}
+          VITE_PORTONE_API_KEY={{ secrets.VITE_PORTONE_API_KEY }}
+          EOL
+          cat front/.env
+
+      - name: create-applicaition-secret
+        run: |
+          chmod 777 -R back
+          cat <<EOL > back/src/main/resources/application-secret.yml
+          spring:
+            config:
+              activate:
+                on-profile: secret
+          
+            datasource:
+              driver-class-name: com.mysql.cj.jdbc.Driver
+              url: jdbc:mysql://${{ secrets.EC2_PUBLIC_IP }}:3306/${{ secrets.DATABASE_NAME }}
+              username: ${{ secrets.DATABASE_USERNAME }}
+              password: ${{ secrets.DATABASE_PASSWORD }}
+          
+            mail:
+              host: smtp.gmail.com
+              port: 587
+              username: ${{ secrets.MAIL_USERNAME }}
+              password: ${{ secrets.MAIL_PASSWORD }}
+              properties:
+                mail:
+                  smtp:
+                    auth: true
+                    timeout: 5000
+                    starttls:
+                      enable: true
+            security:
+              oauth2:
+                client:
+                  registration:
+                    google:
+                      client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
+                      client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+                    naver:
+                      client-id: ${{ secrets.NAVER_CLIENT_ID }}
+                      client-secret: ${{ secrets.NAVER_CLIENT_SECRET }}
+          
+          jwt:
+            secret: ${{ secrets.JWT_SECRET }}
+          
+          coolsms:
+            api:
+              key: ${{ secrets.COOLSMS_API_KEY }}
+              secret: ${{ secrets.COOLSMS_API_SECRET }}
+              from: ${{ secrets.COOLSMS_API_FROM }}
+          EOL
+          cat front/.env
+                    
     
 
 
