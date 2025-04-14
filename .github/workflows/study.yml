@@ -1,0 +1,17 @@
+name: Github_Actions_Study
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  directory-print:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: print
+        run: ls -a
+    
+
+
