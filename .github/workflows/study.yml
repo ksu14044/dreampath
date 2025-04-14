@@ -14,8 +14,8 @@ jobs:
         run: |
           chmod 777 -R front
           cat <<EOL > front/.env
-          VITE_PORTONE_STOREID={{ secrets.VITE_PORTONE_STOREID }}
-          VITE_PORTONE_API_KEY={{ secrets.VITE_PORTONE_API_KEY }}
+          VITE_PORTONE_STOREID=${{ secrets.VITE_PORTONE_STOREID }}
+          VITE_PORTONE_API_KEY=${{ secrets.VITE_PORTONE_API_KEY }}
           EOL
           cat front/.env
 
