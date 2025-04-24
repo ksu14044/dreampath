@@ -81,7 +81,7 @@ export const listBox = css`
     gap: 1rem;
 
     width: 100%;
-    min-height: 30rem;
+    min-height: 40rem;
 `;
 
 export const noPost = css`
